@@ -1,11 +1,9 @@
 import numpy as np
 
-import MLCourse.dataloader as dtl
 import MLCourse.utilities as utils
 import algorithms as algs
 import random
 import math
-
 from sklearn.model_selection import KFold
 
 
@@ -52,37 +50,17 @@ def stratifiedCrossValidate(K, X, Y, Algorithm, parameters):
         if avg_errors < min_error:
             best_params = params
     return best_params
-
+    
 
 if __name__ == '__main__':
 
-    import argparse
-
-    parser = argparse.ArgumentParser(description='Arguments for running.')
-    parser.add_argument('--trainsize', type=int, default=2000,
-                        help='Specify the train set size')
-    parser.add_argument('--testsize', type=int, default=1000,
-                        help='Specify the test set size')
-    parser.add_argument('--numruns', type=int, default=10,
-                        help='Specify the number of runs')
-    parser.add_argument('--dataset', type=str, default="susy",
-                        help='Specify the name of the dataset')
-
-    args = parser.parse_args()
-    trainsize = args.trainsize
-    testsize = args.testsize
-    numruns = args.numruns
-    dataset = args.dataset
-
-
-
     classalgs = {
         #'Random': algs.Classifier,
-        #'Naive Bayes': algs.NaiveBayes,
-        #'Linear Regression': algs.LinearRegressionClass,
+        'Naive Bayes': algs.NaiveBayes,
+        'Linear Regression': algs.LinearRegressionClass,
         #'Logistic Regression': algs.LogisticReg,
         #'Neural Network': algs.NeuralNet,
-        'BigNeuralNet': algs.BigNeuralNet,
+        #'BigNeuralNet': algs.BigNeuralNet,
         #'Kernel Logistic Regression': algs.KernelLogisticRegression,
     }
     numalgs = len(classalgs)
@@ -90,13 +68,6 @@ if __name__ == '__main__':
     # Specify the name of the algorithm and an array of parameter values to try
     # if an algorithm is not include, will run with default parameters
     parameters = {
-        # name of the algorithm to run
-        'Naive Bayes': [
-            # first set of parameters to try
-            { 'usecolumnones': True },
-            # second set of parameters to try
-            { 'usecolumnones': False },
-        ],
         'Neural Network': [
             { 'epochs': 1000, 'nh': 4 },
             { 'epochs': 1000, 'nh': 8 },
@@ -113,16 +84,11 @@ if __name__ == '__main__':
 
     # initialize the errors for each parameter setting to 0
     errors = {}
+    train_data = load_data("train_data.csv")
+    test_data = load_data("test_data.csv")
     for learnername in classalgs:
         errors[learnername] = np.zeros(numruns)
 
-    for r in range(numruns):
-        if dataset == "susy":
-            trainset, testset = dtl.load_susy(trainsize, testsize)
-        elif dataset == "census":
-            trainset, testset = dtl.load_census(trainsize,testsize)
-        else:
-            raise ValueError("dataset %s unknown" % dataset)
 
         #print(trainset[0])
         Xtrain = trainset[0]
