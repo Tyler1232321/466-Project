@@ -4,14 +4,12 @@ import math
 import numpy as np
 
 def load_data(file_name):
-
     import csv
 
     file = open(file_name, 'rt')
     reader = csv.reader(file)
-
     data = []
-    for row in data:
+    for row in reader:
         data.append(row)
     return data
 
