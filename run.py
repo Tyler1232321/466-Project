@@ -1,6 +1,6 @@
 import numpy as np
 
-import MLCourse.utilities as utils
+import utilities as utils
 import algorithms as algs
 import random
 import math
@@ -50,7 +50,7 @@ def stratifiedCrossValidate(K, X, Y, Algorithm, parameters):
         if avg_errors < min_error:
             best_params = params
     return best_params
-    
+
 
 if __name__ == '__main__':
 
@@ -84,36 +84,38 @@ if __name__ == '__main__':
 
     # initialize the errors for each parameter setting to 0
     errors = {}
-    train_data = load_data("train_data.csv")
-    test_data = load_data("test_data.csv")
+    train_data = utils.load_data("train_data.csv")
+    test_data = utils.load_data("test_data.csv")
     for learnername in classalgs:
-        errors[learnername] = np.zeros(numruns)
 
-
-        #print(trainset[0])
-        Xtrain = trainset[0]
-        Ytrain = trainset[1]
+        Xtrain = utils.leaveOneOut(train_data, 0)
+        print(train_data)
+        Ytrain = train_data[:, [0]]
         # cast the Y vector as a matrix
-        Ytrain = np.reshape(Ytrain, [len(Ytrain), 1])
+        Xtrain = np.reshape( Xtrain, [ len( Xtrain ), len( Xtrain[0] ) ] )
+        Ytrain = np.reshape( Ytrain, [ len( Ytrain ), 1 ] )
 
-        Xtest = testset[0]
-        Ytest = testset[1]
+        print(Xtrain.shape)
+        print(Ytrain.shape)
+
+        Xtest = utils.leaveOneOut(test_data, 0)
+        Ytest = test_data[:, [0]]
         # cast the Y vector as a matrix
+        Xtest = np.reshape( Xtest, [ len( Xtest ), len( Xtest[0] ) ] )
         Ytest = np.reshape(Ytest, [len(Ytest), 1])
 
         # this section is for cross-validation
-        '''
         best_parameters = {}
         for learnername, Learner in classalgs.items():
             params = parameters.get(learnername, [ None ])
             best_parameters[learnername] = cross_validate(5, Xtrain, Ytrain, Learner, params)
-        '''
+        
 
         # now we'll run the best set of parameters for each algorithm
         for learnername, Learner in classalgs.items():
-            #params = best_parameters[learnername]
+            params = best_parameters[learnername]
             #print(params)
-            params = { 'epochs': 1000, 'nh1': 8 , 'nh2': 8}
+            #params = { 'epochs': 1000, 'nh1': 8 , 'nh2': 8}
             learner = Learner(params)
             learner.learn(Xtrain, Ytrain)
             predictions = learner.predict( Xtest )

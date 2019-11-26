@@ -1,6 +1,6 @@
 import numpy as np
 
-import MLCourse.utilities as utils
+import utilities as utils
 import random
 
 # Susy: ~50 error
