@@ -79,18 +79,24 @@ if __name__ == '__main__':
             { 'epochs': 1000, 'nh1': 8 , 'nh2': 8},
             { 'epochs': 1000, 'nh1': 16, 'nh2': 16},
             { 'epochs': 1000, 'nh1': 32, 'nh2': 32},
+        ],
+        'Naive Bayes': [
+            { 'red_class_bias': 1.0 },
+            { 'red_class_bias': 0.8 },
+            { 'red_class_bias': 1.2 },
+            { 'red_class_bias': 1.4 },
+            { 'red_class_bias': 0.6 },
         ]
     }
 
     # initialize the errors for each parameter setting to 0
     errors = {}
-    train_data = utils.load_data("train_data.csv")
-    test_data = utils.load_data("test_data.csv")
+    train_data = utils.load_data("true_train_data.csv")
+    test_data = utils.load_data("true_test_data.csv")
     for learnername in classalgs:
 
-        Xtrain = utils.leaveOneOut(train_data, 0)
-        print(train_data)
-        Ytrain = train_data[:, [0]]
+        Xtrain = np.delete( train_data, 1, axis=1 )
+        Ytrain = train_data[:, 0]
         # cast the Y vector as a matrix
         Xtrain = np.reshape( Xtrain, [ len( Xtrain ), len( Xtrain[0] ) ] )
         Ytrain = np.reshape( Ytrain, [ len( Ytrain ), 1 ] )
@@ -98,8 +104,9 @@ if __name__ == '__main__':
         print(Xtrain.shape)
         print(Ytrain.shape)
 
+
         Xtest = utils.leaveOneOut(test_data, 0)
-        Ytest = test_data[:, [0]]
+        Ytest = test_data[:, 0]
         # cast the Y vector as a matrix
         Xtest = np.reshape( Xtest, [ len( Xtest ), len( Xtest[0] ) ] )
         Ytest = np.reshape(Ytest, [len(Ytest), 1])
@@ -108,7 +115,7 @@ if __name__ == '__main__':
         best_parameters = {}
         for learnername, Learner in classalgs.items():
             params = parameters.get(learnername, [ None ])
-            best_parameters[learnername] = cross_validate(5, Xtrain, Ytrain, Learner, params)
+            best_parameters[learnername] = stratifiedCrossValidate(5, Xtrain, Ytrain, Learner, params)
         
 
         # now we'll run the best set of parameters for each algorithm

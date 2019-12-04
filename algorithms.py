@@ -53,9 +53,10 @@ class LinearRegressionClass(Classifier):
 class NaiveBayes(Classifier):
     def __init__(self, parameters = {}):
         """ Params can contain any useful parameters for the algorithm """
-        # Assumes that a bias unit has been added to feature vector as the last feature
-        # If usecolumnones is False, it ignores this last feature
-        self.params = utils.update_dictionary_items({'usecolumnones': False}, parameters)
+        # red_class_bias is an additional bias we place in favour of the red fighter,
+        # where 1 means no bias, 2 means we will only choose blue if it is twice as likely as red, 
+        # 0.5 means that we will only choose red is it is twice as likely as blue, and so on
+        self.params = utils.update_dictionary_items({'red_class_bias': 1}, parameters)
 
     # helper function to seperate data by class
     def seperate_data(self, xtrain, ytrain):
@@ -69,9 +70,7 @@ class NaiveBayes(Classifier):
         return seperated_data
 
     def learn(self, Xtrain, ytrain):
-        # apply the regularizer or not
-        if not self.params['usecolumnones']:
-            Xtrain = np.delete(Xtrain, len(Xtrain[0])-1, 1)
+        self.red_bias = self.params['red_class_bias']
 
         # obtain number of classes
         if ytrain.shape[1] == 1:
@@ -104,9 +103,6 @@ class NaiveBayes(Classifier):
                         np.std([x[feature] for x in self.seperated_data[i]] )
 
     def predict(self, Xtest):
-        # apply the regularizer or not
-        if not self.params['usecolumnones']:
-            Xtest = np.delete(Xtest, len(Xtest[0])-1, 1)
 
         n,m = Xtest.shape
         # initialize predictions list
@@ -123,6 +119,9 @@ class NaiveBayes(Classifier):
                         Xtest[i][j], \
                         self.class_stats[k][j]["feat_mean"], \
                         self.class_stats[k][j]['standard_dev'] )
+                # if we are looking at red's probability, add red's bias
+                if k == 1:
+                    prob *= self.red_bias
                 # if this class is most probable so far, set it as best
                 if prob > maxProb:
                     maxProb = prob

@@ -11,6 +11,7 @@ def load_data(file_name):
     data = []
     for row in reader:
         data.append(row)
+    data = np.array([np.array(xi) for xi in data])
     return data
 
 def gaussian_pdf(x, mean, stdev):
