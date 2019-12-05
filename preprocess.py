@@ -21,6 +21,7 @@ if __name__ == '__main__':
 		reader = csv.reader( csv_file )
 
 		# get the data
+		next(reader) # skip the header
 		for row in reader:
 			if row[0] == 'Red':
 				row[0] = 1

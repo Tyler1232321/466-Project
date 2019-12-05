@@ -2,6 +2,7 @@ import numpy as np
 
 import utilities as utils
 import random
+from collections import defaultdict
 
 # Susy: ~50 error
 class Classifier:
@@ -62,11 +63,13 @@ class NaiveBayes(Classifier):
     def seperate_data(self, xtrain, ytrain):
         n, m = xtrain.shape
         seperated_data = {}
+        str_to_float = lambda x: float(x)
+        str_to_float_func = np.vectorize(str_to_float)
         for i in range(n):
             if ytrain[i][0] not in seperated_data:
                 seperated_data[ytrain[i][0]] = []
 
-            seperated_data[ytrain[i][0]].append(xtrain[i])
+            seperated_data[ytrain[i][0]].append(str_to_float_func(xtrain[i]))
         return seperated_data
 
     def learn(self, Xtrain, ytrain):
@@ -90,17 +93,15 @@ class NaiveBayes(Classifier):
         self.seperated_data = self.seperate_data(Xtrain, ytrain)
 
         # get the class stats for each feature
-        self.class_stats = []
+        self.class_stats = defaultdict(dict)
+        
         for i in range(self.numclasses):
-            self.class_stats.append({})
-
             for feature in range(m):
                 self.class_stats[i][feature] = {}
-
                 self.class_stats[i][feature]['feat_mean'] = \
-                        np.mean([x[feature] for x in self.seperated_data[i]] )
+                        np.mean([x[feature] for x in self.seperated_data[str(i)]] )
                 self.class_stats[i][feature]['standard_dev'] = \
-                        np.std([x[feature] for x in self.seperated_data[i]] )
+                        np.std([x[feature] for x in self.seperated_data[str(i)]] )
 
     def predict(self, Xtest):
 
@@ -162,9 +163,9 @@ class BigNeuralNet(Classifier):
 
     def learn(self, Xtrain, ytrain):
         n,m = Xtrain.shape
-        self.wh1 = np.random.rand( m, self.params['nh1'] );
+        self.wh1 = np.random.rand( m, self.params['nh1'] )
         self.wh2 = np.random.rand( self.params['nh1'], self.params['nh2'] )
-        self.wo = np.random.rand( self.params['nh2'], 1 );
+        self.wo = np.random.rand( self.params['nh2'], 1 )
 
         step_size = self.params['stepsize']
 

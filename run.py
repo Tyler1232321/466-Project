@@ -57,7 +57,7 @@ if __name__ == '__main__':
     classalgs = {
         #'Random': algs.Classifier,
         'Naive Bayes': algs.NaiveBayes,
-        'Linear Regression': algs.LinearRegressionClass,
+        # 'Linear Regression': algs.LinearRegressionClass,
         #'Logistic Regression': algs.LogisticReg,
         #'Neural Network': algs.NeuralNet,
         #'BigNeuralNet': algs.BigNeuralNet,
@@ -93,9 +93,13 @@ if __name__ == '__main__':
     errors = {}
     train_data = utils.load_data("true_train_data.csv")
     test_data = utils.load_data("true_test_data.csv")
+    str_to_float = lambda x: float(x)
+    str_to_float_func = np.vectorize(str_to_float)
+    print(train_data)
     for learnername in classalgs:
-
         Xtrain = np.delete( train_data, 1, axis=1 )
+        Xtrain = np.delete( Xtrain, -1, axis=1 ) # delete the last column, which are all Y values 
+        Xtrain = Xtrain.astype(float)
         Ytrain = train_data[:, 0]
         # cast the Y vector as a matrix
         Xtrain = np.reshape( Xtrain, [ len( Xtrain ), len( Xtrain[0] ) ] )
