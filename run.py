@@ -95,7 +95,6 @@ if __name__ == '__main__':
     test_data = utils.load_data("true_test_data.csv")
     str_to_float = lambda x: float(x)
     str_to_float_func = np.vectorize(str_to_float)
-    print(train_data)
     for learnername in classalgs:
         Xtrain = np.delete( train_data, 1, axis=1 )
         Xtrain = np.delete( Xtrain, -1, axis=1 ) # delete the last column, which are all Y values 
