@@ -5,6 +5,7 @@ import algorithms as algs
 import random
 import math
 from sklearn.model_selection import KFold
+from collections import defaultdict
 
 
 def getaccuracy(ytest, predictions):
@@ -13,7 +14,6 @@ def getaccuracy(ytest, predictions):
     for i in range(len(ytest)):
         if ytest[i] == predictions[i]:
             correct += 1
-    print(correct)
     # count number of correct predictions
     #correct = np.sum(ytest == predictions)
     # return percent correct
@@ -47,7 +47,7 @@ def stratifiedCrossValidate(K, X, Y, Algorithm, parameters):
     for i, params in enumerate(parameters):
         print('Cross validate parameters:', params)
         print('average error:', avg_errors[i])
-        if avg_errors < min_error:
+        if avg_errors[i] < min_error:
             best_params = params
     return best_params
 
@@ -90,29 +90,34 @@ if __name__ == '__main__':
     }
 
     # initialize the errors for each parameter setting to 0
-    errors = {}
+    errors = defaultdict(list)
     train_data = utils.load_data("true_train_data.csv")
     test_data = utils.load_data("true_test_data.csv")
     str_to_float = lambda x: float(x)
     str_to_float_func = np.vectorize(str_to_float)
+    numruns = 2
     for learnername in classalgs:
         Xtrain = np.delete( train_data, 1, axis=1 )
         Xtrain = np.delete( Xtrain, -1, axis=1 ) # delete the last column, which are all Y values 
         Xtrain = Xtrain.astype(float)
         Ytrain = train_data[:, 0]
+        Ytrain = Ytrain.astype(int)
         # cast the Y vector as a matrix
         Xtrain = np.reshape( Xtrain, [ len( Xtrain ), len( Xtrain[0] ) ] )
         Ytrain = np.reshape( Ytrain, [ len( Ytrain ), 1 ] )
 
-        print(Xtrain.shape)
-        print(Ytrain.shape)
-
 
         Xtest = utils.leaveOneOut(test_data, 0)
+        Xtest = np.delete( train_data, 1, axis=1 )
+        Xtest = np.delete( Xtest, -1, axis=1 ) # delete the last column, which are all Y values 
+
         Ytest = test_data[:, 0]
         # cast the Y vector as a matrix
         Xtest = np.reshape( Xtest, [ len( Xtest ), len( Xtest[0] ) ] )
         Ytest = np.reshape(Ytest, [len(Ytest), 1])
+
+        Xtest = Xtest.astype(float)
+        Ytest = Ytest.astype(int)
 
         # this section is for cross-validation
         best_parameters = {}
@@ -120,16 +125,16 @@ if __name__ == '__main__':
             params = parameters.get(learnername, [ None ])
             best_parameters[learnername] = stratifiedCrossValidate(5, Xtrain, Ytrain, Learner, params)
         
-
-        # now we'll run the best set of parameters for each algorithm
-        for learnername, Learner in classalgs.items():
-            params = best_parameters[learnername]
-            #print(params)
-            #params = { 'epochs': 1000, 'nh1': 8 , 'nh2': 8}
-            learner = Learner(params)
-            learner.learn(Xtrain, Ytrain)
-            predictions = learner.predict( Xtest )
-            errors[learnername][r] = geterror(Ytest, predictions)
+        for r in range(numruns):
+            # now we'll run the best set of parameters for each algorithm
+            for learnername, Learner in classalgs.items():
+                params = best_parameters[learnername]
+                #print(params)
+                #params = { 'epochs': 1000, 'nh1': 8 , 'nh2': 8}
+                learner = Learner(params)
+                learner.learn(Xtrain, Ytrain)
+                predictions = learner.predict( Xtest )
+                errors[learnername].append(geterror(Ytest, predictions))
 
     for learnername in classalgs:
         aveerror = np.mean(errors[learnername])

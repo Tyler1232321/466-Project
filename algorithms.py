@@ -99,12 +99,11 @@ class NaiveBayes(Classifier):
             for feature in range(m):
                 self.class_stats[i][feature] = {}
                 self.class_stats[i][feature]['feat_mean'] = \
-                        np.mean([x[feature] for x in self.seperated_data[str(i)]] )
+                        np.mean([x[feature] for x in self.seperated_data[i]] )
                 self.class_stats[i][feature]['standard_dev'] = \
-                        np.std([x[feature] for x in self.seperated_data[str(i)]] )
+                        np.std([x[feature] for x in self.seperated_data[i]] )
 
     def predict(self, Xtest):
-
         n,m = Xtest.shape
         # initialize predictions list
         predictions = []
