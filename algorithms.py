@@ -3,6 +3,7 @@ import numpy as np
 import utilities as utils
 import random
 from collections import defaultdict
+from sklearn.svm import SVC
 
 # Susy: ~50 error
 class Classifier:
@@ -286,3 +287,26 @@ class NeuralNet(Classifier):
             else:
                 predictions.append(0.)
         return predictions
+
+class SVM(Classifier):
+
+    def __init__(self, parameters={}):
+        """Website References:
+            https://analyticsindiamag.com/understanding-the-basics-of-svm-with-example-and-python-implementation/
+            https://towardsdatascience.com/support-vector-machine-python-example-d67d9b63f1c8
+            https://www.kdnuggets.com/2016/06/select-support-vector-machine-kernels.html
+            https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html
+        """
+        
+        self.params = utils.update_dictionary_items({
+            'kernel': 'linear'
+        }, parameters)
+        self.classifier = SVC(kernel=self.params['kernel'], random_state=1)
+    
+    def learn(self, Xtrain, ytrain):
+        
+        self.classifier.fit(Xtrain, ytrain)
+
+    def predict(self, Xtest):
+        
+        return self.classifier.predict(Xtest)
