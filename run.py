@@ -63,6 +63,7 @@ if __name__ == '__main__':
         #'Neural Network': algs.NeuralNet,
         #'BigNeuralNet': algs.BigNeuralNet,
         #'Kernel Logistic Regression': algs.KernelLogisticRegression,
+        #'SVM':algs.SVM
     }
     numalgs = len(classalgs)
 
@@ -83,10 +84,15 @@ if __name__ == '__main__':
         ],
         'Naive Bayes': [
             { 'red_class_bias': 1.0 },
-            # { 'red_class_bias': 0.8 },
-            # { 'red_class_bias': 1.2 },
-            # { 'red_class_bias': 1.4 },
-            # { 'red_class_bias': 0.6 },
+            { 'red_class_bias': 0.8 },
+            { 'red_class_bias': 1.2 },
+            { 'red_class_bias': 1.4 },
+            { 'red_class_bias': 0.6 },
+        ],
+        'SVM': [
+            {'kernel': 'linear'},
+            {'kernel': 'rbf'},
+            {'kernel': 'poly'},
         ]
     }
 
