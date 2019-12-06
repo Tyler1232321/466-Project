@@ -301,12 +301,13 @@ class SVM(Classifier):
         self.params = utils.update_dictionary_items({
             'kernel': 'linear'
         }, parameters)
-        self.classifier = SVC(kernel=self.params['kernel'], random_state=1)
+        if self.params['kernel'] == 'poly':
+            self.classifier = SVC(kernel=self.params['kernel'], gamma='scale', degree=self.params['degree'])
+        else:    
+            self.classifier = SVC(kernel=self.params['kernel'], gamma='scale')
     
     def learn(self, Xtrain, ytrain):
-        
-        self.classifier.fit(Xtrain, ytrain)
+        self.classifier.fit(Xtrain, ytrain.ravel())
 
     def predict(self, Xtest):
-        
         return self.classifier.predict(Xtest)

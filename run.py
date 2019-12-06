@@ -56,13 +56,13 @@ if __name__ == '__main__':
 
     classalgs = {
         #'Random': algs.Classifier,
-        'Naive Bayes': algs.NaiveBayes,
+        # 'Naive Bayes': algs.NaiveBayes,
         # 'Linear Regression': algs.LinearRegressionClass,
         #'Logistic Regression': algs.LogisticReg,
         #'Neural Network': algs.NeuralNet,
         #'BigNeuralNet': algs.BigNeuralNet,
         #'Kernel Logistic Regression': algs.KernelLogisticRegression,
-        #'SVM':algs.SVM
+        'SVM':algs.SVM
     }
     numalgs = len(classalgs)
 
@@ -92,6 +92,9 @@ if __name__ == '__main__':
             {'kernel': 'linear'},
             {'kernel': 'rbf'},
             {'kernel': 'poly'},
+            {'kernel': 'poly', 'degree': 5},
+            {'kernel': 'poly', 'degree': 10},
+            {'kernel': 'poly', 'degree': 15},
         ]
     }
 
