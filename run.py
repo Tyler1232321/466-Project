@@ -15,6 +15,7 @@ def getaccuracy(ytest, predictions):
         if ytest[i] == predictions[i]:
             correct += 1
     # count number of correct predictions
+    #print( correct / len( ytest ) )
     #correct = np.sum(ytest == predictions)
     # return percent correct
     return (correct / float(len(ytest))) * 100
@@ -27,20 +28,24 @@ def stratifiedCrossValidate(K, X, Y, Algorithm, parameters):
 
     all_errors = np.zeros((len(parameters), K))
 
-    skf = StratifiedKFold(n_splits=K)
+    skf = StratifiedKFold(n_splits=K, shuffle=True)
 
+    count = 0
     for train_index, test_index in skf.split(X, Y):
         Xtrain, Xtest = X[train_index], X[test_index]
         Ytrain, Ytest = Y[train_index], Y[test_index]
-
-        count = 0
+        
         for i, params in enumerate(parameters):
+            predictions = []
             learner = Algorithm(params)
             learner.learn(Xtrain, Ytrain)
             predictions = learner.predict(Xtest)
+            print(geterror(Ytest, predictions))
             all_errors[i][count] = geterror(Ytest, predictions)
-            count += 1
+        count += 1
+            
 
+    print(all_errors)
     avg_errors = np.mean(all_errors, axis=1)
     min_error = 1000
     best_params = None
@@ -102,12 +107,9 @@ if __name__ == '__main__':
     errors = defaultdict(list)
     train_data = utils.load_data("true_train_data.csv")
     test_data = utils.load_data("true_test_data.csv")
-    str_to_float = lambda x: float(x)
-    str_to_float_func = np.vectorize(str_to_float)
     numruns = 2
     for learnername in classalgs:
-        Xtrain = np.delete( train_data, 1, axis=1 )
-        Xtrain = np.delete( Xtrain, -1, axis=1 ) # delete the last column, which are all Y values 
+        Xtrain = np.delete( train_data, 0, axis=1 ) # delete the last column, which are all Y values 
         Xtrain = Xtrain.astype(float)
         Ytrain = train_data[:, 0]
         Ytrain = Ytrain.astype(int)
@@ -115,11 +117,8 @@ if __name__ == '__main__':
         Xtrain = np.reshape( Xtrain, [ len( Xtrain ), len( Xtrain[0] ) ] )
         Ytrain = np.reshape( Ytrain, [ len( Ytrain ), 1 ] )
 
-
-        Xtest = utils.leaveOneOut(test_data, 0)
-        Xtest = np.delete( train_data, 1, axis=1 )
-        Xtest = np.delete( Xtest, -1, axis=1 ) # delete the last column, which are all Y values 
-
+        Xtest = np.delete( test_data, 0, axis=1 ) 
+        
         Ytest = test_data[:, 0]
         # cast the Y vector as a matrix
         Xtest = np.reshape( Xtest, [ len( Xtest ), len( Xtest[0] ) ] )

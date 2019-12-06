@@ -113,9 +113,13 @@ class NaiveBayes(Classifier):
             maxInd = -1
             maxProb = -1000000
             # calculate the probability of each class occuring given the data point
-            for k in range( self.numclasses ):
+            for k in range( self.numclasses):
                 prob = self.probabilities[k]
                 for j in range(m):
+                    val1 = Xtest[i][j]
+                    val2 = self.class_stats[k][j]["feat_mean"]
+                    val3 = self.class_stats[k][j]['standard_dev']
+                    # print(val1, val2, val3, type(val1), type(val2), type(val3))
                     prob *= utils.gaussian_pdf( \
                         Xtest[i][j], \
                         self.class_stats[k][j]["feat_mean"], \
