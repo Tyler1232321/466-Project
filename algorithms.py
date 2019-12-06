@@ -221,7 +221,7 @@ class BigNeuralNet(Classifier):
                 
         return predictions
 
-# Susy: ~23 error (4 hidden units)
+
 class NeuralNet(Classifier):
     def __init__(self, parameters={}):
         self.params = utils.update_dictionary_items({
@@ -259,6 +259,8 @@ class NeuralNet(Classifier):
 
         # Batch gradient descent with back propagation
         for i in range(self.params['epochs']):
+            if i % 50 == 0:
+                print( self.cost(Xtrain, ytrain) )
 
             hidden_layer = self.transfer( np.dot( Xtrain, self.wi ) )
             output = self.transfer( np.dot( hidden_layer, self.wo ) )
@@ -277,6 +279,9 @@ class NeuralNet(Classifier):
                 for feature in range(len(self.wi)):
                     self.wi[feature][neuron] -= hidden_gradient[feature][neuron] * step_size
 
+            print(self.wi)
+            print(self.wo)
+
     def predict(self,Xtest):
         predictions = []
         preds = []
@@ -285,6 +290,7 @@ class NeuralNet(Classifier):
 
         output = self.transfer( np.dot( hidden_layer, self.wo ) )
 
+        #print(output)
 
         for val in output:
             if val > 0.5:

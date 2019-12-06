@@ -10,12 +10,13 @@ from collections import defaultdict
 
 def getaccuracy(ytest, predictions):
     correct = 0
+    #print(predictions)
 
     for i in range(len(ytest)):
         if ytest[i] == predictions[i]:
             correct += 1
     # count number of correct predictions
-    #print( correct / len( ytest ) )
+    print( correct / len( ytest ) )
     #correct = np.sum(ytest == predictions)
     # return percent correct
     return (correct / float(len(ytest))) * 100
@@ -40,7 +41,6 @@ def stratifiedCrossValidate(K, X, Y, Algorithm, parameters):
             learner = Algorithm(params)
             learner.learn(Xtrain, Ytrain)
             predictions = learner.predict(Xtest)
-            print(geterror(Ytest, predictions))
             all_errors[i][count] = geterror(Ytest, predictions)
         count += 1
             
@@ -56,18 +56,44 @@ def stratifiedCrossValidate(K, X, Y, Algorithm, parameters):
             best_params = params
     return best_params
 
+def getFScore(tests, predictions):
+    true_pos = 0
+    false_pos = 0
+    true_neg = 0
+    false_neg = 0
+    for i in range( len( tests ) ):
+        if tests[i] == 1 and predictions[i] == 1:
+            true_pos += 1
+        elif tests[i] == 1 and predictions[i] == 0:
+            false_neg += 1
+        elif tests[i] == 0 and predictions[i] == 1:
+            false_pos += 1
+        else:
+            true_neg += 1
+
+    print("tp"), print(true_pos)
+    print("fp"), print(false_pos)
+    print("tn"), print(true_neg)
+    print("fn"), print(false_neg)
+    precision = true_pos / (true_pos + false_pos)
+    print('precision'), print(precision)
+    recall = true_pos / (true_pos + false_neg)
+    print('recall'), print( recall )
+    F1Score = 2 * (precision * recall) / (precision + recall)
+    return F1Score
+
 
 if __name__ == '__main__':
 
     classalgs = {
         #'Random': algs.Classifier,
         'Naive Bayes': algs.NaiveBayes,
-        'Linear Regression': algs.LinearRegressionClass,
-        #'Logistic Regression': algs.LogisticReg,
+        #'Linear Regression': algs.LinearRegressionClass,
+        #'Logistic Regression': algs.LogisticReg
         #'Neural Network': algs.NeuralNet,
         #'BigNeuralNet': algs.BigNeuralNet,
         #'Kernel Logistic Regression': algs.KernelLogisticRegression,
-        'SVM':algs.SVM
+        #'SVM':algs.SVM
     }
     numalgs = len(classalgs)
 
@@ -87,11 +113,7 @@ if __name__ == '__main__':
             { 'epochs': 1000, 'nh1': 32, 'nh2': 32},
         ],
         'Naive Bayes': [
-            { 'red_class_bias': 1.0 },
-            { 'red_class_bias': 0.8 },
-            { 'red_class_bias': 1.2 },
-            { 'red_class_bias': 1.4 },
-            { 'red_class_bias': 0.6 },
+            { 'red_class_bias': 2.0 }
         ],
         'SVM': [
             {'kernel': 'linear'},
@@ -124,25 +146,29 @@ if __name__ == '__main__':
         Xtest = Xtest.astype(float)
         Ytest = Ytest.astype(int)
 
+        '''
         # this section is for cross-validation
         best_parameters = {}
         for learnername, Learner in classalgs.items():
             params = parameters.get(learnername, [ None ])
-            best_parameters[learnername] = stratifiedCrossValidate(5, Xtrain, Ytrain, Learner, params)
+            best_parameters[learnername] = stratifiedCrossValidate(10, Xtrain, Ytrain, Learner, params)
+        '''
         
         for r in range(numruns):
             # now we'll run the best set of parameters for each algorithm
             for learnername, Learner in classalgs.items():
-                params = best_parameters[learnername]
-                #print(params)
-                #params = { 'epochs': 1000, 'nh1': 8 , 'nh2': 8}
+                params = { 'red_class_bias': 2.0 }
                 learner = Learner(params)
                 learner.learn(Xtrain, Ytrain)
                 predictions = learner.predict( Xtest )
-                errors[learnername].append(geterror(Ytest, predictions))
+                print(getFScore(Ytest, predictions))
+                errors[learnername].append(getFScore(Ytest, predictions))
+
+        print(errors)
 
     for learnername in classalgs:
         aveerror = np.mean(errors[learnername])
         stderror = np.std(errors[learnername])
+
         print('Average error for ' + learnername + ': ' + str(aveerror))
         print ('Standard error for ' + learnername + ': ' + str( stderror / math.sqrt(numruns)) )
