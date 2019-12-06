@@ -15,6 +15,7 @@ def getaccuracy(ytest, predictions):
         if ytest[i] == predictions[i]:
             correct += 1
     # count number of correct predictions
+    #print( correct / len( ytest ) )
     #correct = np.sum(ytest == predictions)
     # return percent correct
     return (correct / float(len(ytest))) * 100
@@ -27,21 +28,24 @@ def stratifiedCrossValidate(K, X, Y, Algorithm, parameters):
 
     all_errors = np.zeros((len(parameters), K))
 
-    skf = StratifiedKFold(n_splits=K)
+    skf = StratifiedKFold(n_splits=K, shuffle=True)
 
+    count = 0
     for train_index, test_index in skf.split(X, Y):
         Xtrain, Xtest = X[train_index], X[test_index]
         Ytrain, Ytest = Y[train_index], Y[test_index]
         
-        count = 0
         for i, params in enumerate(parameters):
             predictions = []
             learner = Algorithm(params)
             learner.learn(Xtrain, Ytrain)
             predictions = learner.predict(Xtest)
+            print(geterror(Ytest, predictions))
             all_errors[i][count] = geterror(Ytest, predictions)
-            count += 1
+        count += 1
+            
 
+    print(all_errors)
     avg_errors = np.mean(all_errors, axis=1)
     min_error = 1000
     best_params = None
@@ -58,11 +62,12 @@ if __name__ == '__main__':
     classalgs = {
         #'Random': algs.Classifier,
         'Naive Bayes': algs.NaiveBayes,
-        # 'Linear Regression': algs.LinearRegressionClass,
+        'Linear Regression': algs.LinearRegressionClass,
         #'Logistic Regression': algs.LogisticReg,
         #'Neural Network': algs.NeuralNet,
         #'BigNeuralNet': algs.BigNeuralNet,
         #'Kernel Logistic Regression': algs.KernelLogisticRegression,
+        'SVM':algs.SVM
     }
     numalgs = len(classalgs)
 
@@ -83,10 +88,15 @@ if __name__ == '__main__':
         ],
         'Naive Bayes': [
             { 'red_class_bias': 1.0 },
-            # { 'red_class_bias': 0.8 },
-            # { 'red_class_bias': 1.2 },
-            # { 'red_class_bias': 1.4 },
-            # { 'red_class_bias': 0.6 },
+            { 'red_class_bias': 0.8 },
+            { 'red_class_bias': 1.2 },
+            { 'red_class_bias': 1.4 },
+            { 'red_class_bias': 0.6 },
+        ],
+        'SVM': [
+            {'kernel': 'linear'},
+            {'kernel': 'rbf'},
+            {'kernel': 'poly'},
         ]
     }
 
