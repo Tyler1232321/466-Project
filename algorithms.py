@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn import preprocessing
+from sklearn.svm import SVC
 
 import utilities as utils
 from sklearn.neural_network import MLPClassifier
@@ -263,3 +264,27 @@ class NeuralNet(Classifier):
             else:
                 predictions.append(0.)
         return predictions
+
+
+class SVM(Classifier):
+
+    def __init__(self, parameters={}):
+        """Website References:
+            https://analyticsindiamag.com/understanding-the-basics-of-svm-with-example-and-python-implementation/
+            https://towardsdatascience.com/support-vector-machine-python-example-d67d9b63f1c8
+            https://www.kdnuggets.com/2016/06/select-support-vector-machine-kernels.html
+            https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html
+        """
+
+        self.params = parameters
+
+        if self.params['kernel'] == 'poly':
+            self.classifier = SVC(kernel=self.params['kernel'], gamma='scale', degree=self.params['degree'])
+        else:
+            self.classifier = SVC(kernel=self.params['kernel'], gamma='scale')
+
+    def learn(self, Xtrain, ytrain):
+        self.classifier.fit(Xtrain, ytrain.ravel())
+
+    def predict(self, Xtest):
+        return self.classifier.predict(Xtest)

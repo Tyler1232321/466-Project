@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils import resample
 
@@ -20,6 +21,10 @@ def getaccuracy(ytest, predictions):
 
 def geterror(ytest, predictions):
     return (100 - getaccuracy(ytest, predictions))
+
+def get_fscore(ytest, predictions):
+    return metrics.f1_score(ytest, predictions)
+
 
 def stratifiedCrossValidate(K, X, Y, Algorithm, parameters):
     from sklearn.model_selection import StratifiedKFold
@@ -59,9 +64,10 @@ if __name__ == '__main__':
         # 'Naive Bayes': algs.NaiveBayes,
         # 'Linear Regression': algs.LinearRegressionClass,
         # 'Logistic Regression': algs.LogisticReg,
-        #'Neural Network': algs.NeuralNet,
-        'BigNeuralNet': algs.BigNeuralNet,
+        # 'Neural Network': algs.NeuralNet,
+        # 'BigNeuralNet': algs.BigNeuralNet,
         #'Kernel Logistic Regression': algs.KernelLogisticRegression,
+        'SVM': algs.SVM
     }
     numalgs = len(classalgs)
 
@@ -90,6 +96,13 @@ if __name__ == '__main__':
         'Logistic' : [
             { 'stepsize': 0.01, 'epochs': 100 },
             { 'stepsize': 0.05, 'epochs': 100 },
+        ],
+        'SVM' : [
+            {'kernel': 'linear'},
+            {'kernel': 'rbf'},
+            {'kernel': 'poly', 'degree': 5},
+            {'kernel': 'poly', 'degree': 10},
+            {'kernel': 'poly', 'degree': 15},
         ]
     }
 
@@ -133,7 +146,7 @@ if __name__ == '__main__':
         sample_idx = np.asarray([x for x in range(len(Xtest))])
         for r in range(numruns):
             # now we'll run the best set of parameters for each algorithm
-            b = resample(sample_idx, replace=True, n_samples=200, random_state=1)
+            b = resample(sample_idx, replace=True, n_samples=200)
             for learnername, Learner in classalgs.items():
                 params = best_parameters[learnername]
                 #print(params)
@@ -142,8 +155,9 @@ if __name__ == '__main__':
                 learner = Learner(params)
                 learner.learn(Xtrain, Ytrain)
                 predictions = learner.predict( Xtest_b )
-                errors[learnername].append(geterror(Ytest_b, predictions))
+                errors[learnername].append(get_fscore(Ytest_b, predictions))
 
+    print(errors)
     for learnername in classalgs:
         aveerror = np.mean(errors[learnername])
         stderror = np.std(errors[learnername])
