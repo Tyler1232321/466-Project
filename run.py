@@ -1,4 +1,6 @@
 import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.utils import resample
 
 import utilities as utils
 import algorithms as algs
@@ -10,13 +12,10 @@ from collections import defaultdict
 
 def getaccuracy(ytest, predictions):
     correct = 0
-
     for i in range(len(ytest)):
         if ytest[i] == predictions[i]:
             correct += 1
-    # count number of correct predictions
-    #correct = np.sum(ytest == predictions)
-    # return percent correct
+
     return (correct / float(len(ytest))) * 100
 
 def geterror(ytest, predictions):
@@ -27,7 +26,7 @@ def stratifiedCrossValidate(K, X, Y, Algorithm, parameters):
 
     all_errors = np.zeros((len(parameters), K))
 
-    skf = StratifiedKFold(n_splits=K)
+    skf = StratifiedKFold(n_splits=K, shuffle=True)
 
     for train_index, test_index in skf.split(X, Y):
         Xtrain, Xtest = X[train_index], X[test_index]
@@ -57,11 +56,11 @@ if __name__ == '__main__':
 
     classalgs = {
         #'Random': algs.Classifier,
-        'Naive Bayes': algs.NaiveBayes,
+        # 'Naive Bayes': algs.NaiveBayes,
         # 'Linear Regression': algs.LinearRegressionClass,
-        #'Logistic Regression': algs.LogisticReg,
+        # 'Logistic Regression': algs.LogisticReg,
         #'Neural Network': algs.NeuralNet,
-        #'BigNeuralNet': algs.BigNeuralNet,
+        'BigNeuralNet': algs.BigNeuralNet,
         #'Kernel Logistic Regression': algs.KernelLogisticRegression,
     }
     numalgs = len(classalgs)
@@ -83,10 +82,14 @@ if __name__ == '__main__':
         ],
         'Naive Bayes': [
             { 'red_class_bias': 1.0 },
-            # { 'red_class_bias': 0.8 },
-            # { 'red_class_bias': 1.2 },
-            # { 'red_class_bias': 1.4 },
-            # { 'red_class_bias': 0.6 },
+            { 'red_class_bias': 0.8 },
+            { 'red_class_bias': 1.2 },
+            { 'red_class_bias': 1.4 },
+            { 'red_class_bias': 0.6 },
+        ],
+        'Logistic' : [
+            { 'stepsize': 0.01, 'epochs': 100 },
+            { 'stepsize': 0.05, 'epochs': 100 },
         ]
     }
 
@@ -104,7 +107,7 @@ if __name__ == '__main__':
         Xtrain = np.reshape( Xtrain, [ len( Xtrain ), len( Xtrain[0] ) ] )
         Ytrain = np.reshape( Ytrain, [ len( Ytrain ), 1 ] )
 
-        Xtest = np.delete( test_data, 0, axis=1 ) 
+        Xtest = np.delete( test_data, 0, axis=1)
         
         Ytest = test_data[:, 0]
         # cast the Y vector as a matrix
@@ -114,22 +117,32 @@ if __name__ == '__main__':
         Xtest = Xtest.astype(float)
         Ytest = Ytest.astype(int)
 
+        scaler = StandardScaler()
+        scaler.fit(Xtrain)
+        Xtrain = scaler.transform(Xtrain)
+        Xtest = scaler.transform(Xtest)
+
+        #Ytrain = np.zeros(Ytrain.shape)
+
         # this section is for cross-validation
         best_parameters = {}
         for learnername, Learner in classalgs.items():
             params = parameters.get(learnername, [ None ])
             best_parameters[learnername] = stratifiedCrossValidate(5, Xtrain, Ytrain, Learner, params)
-        
+
+        sample_idx = np.asarray([x for x in range(len(Xtest))])
         for r in range(numruns):
             # now we'll run the best set of parameters for each algorithm
+            b = resample(sample_idx, replace=True, n_samples=200, random_state=1)
             for learnername, Learner in classalgs.items():
                 params = best_parameters[learnername]
                 #print(params)
-                #params = { 'epochs': 1000, 'nh1': 8 , 'nh2': 8}
+                Xtest_b = np.take(Xtest, b, 0)
+                Ytest_b = np.take(Ytest, b, 0)
                 learner = Learner(params)
                 learner.learn(Xtrain, Ytrain)
-                predictions = learner.predict( Xtest )
-                errors[learnername].append(geterror(Ytest, predictions))
+                predictions = learner.predict( Xtest_b )
+                errors[learnername].append(geterror(Ytest_b, predictions))
 
     for learnername in classalgs:
         aveerror = np.mean(errors[learnername])

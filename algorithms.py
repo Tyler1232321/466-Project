@@ -1,6 +1,9 @@
 import numpy as np
+from sklearn import preprocessing
 
 import utilities as utils
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import random
 
 # Susy: ~50 error
@@ -146,78 +149,48 @@ class BigNeuralNet(Classifier):
             'epochs': 10,
         }, parameters)
 
-        if self.params['transfer'] is 'sigmoid':
-            self.transfer = utils.sigmoid
-            self.dtransfer = utils.dsigmoid
-        else:
-            # For now, only allowing sigmoid transfer
-            raise Exception('NeuralNet -> can only handle sigmoid transfer, must set option transfer to string sigmoid')
+        self.nn = MLPClassifier(hidden_layer_sizes=(50, 50, 50), max_iter=10000)
 
-        self.wi = None
-        self.wo = None
 
-    # cost function for testing
-    def cost(self, X, y):
-        preds = self.predict(X)
-        tot_err = 0
-        for i in range(len(preds)):
-            tot_err += abs(preds[i] - y[i])
-        return tot_err
 
     def learn(self, Xtrain, ytrain):
-        n,m = Xtrain.shape
-        self.wh1 = np.random.rand( m, self.params['nh1'] );
-        self.wh2 = np.random.rand( self.params['nh1'], self.params['nh2'] )
-        self.wo = np.random.rand( self.params['nh2'], 1 );
-
-        step_size = self.params['stepsize']
-
-        # Batch gradient descent with backpropagation
-        for i in range(self.params['epochs']):
-
-            hidden_layer1 = self.transfer( np.dot( Xtrain, self.wh1 ) )
-            hidden_layer2 = self.transfer( np.dot( hidden_layer1, self.wh2 ) )
-            output = self.transfer( np.dot( hidden_layer2, self.wo ) )
-
-            output_error = output - ytrain
-
-            output_gradient = np.dot(hidden_layer2.T, output_error)
-
-            temp = hidden_layer2 * ( 1 - hidden_layer2 )
-            hidden_error_2 = np.multiply( self.wo.dot(output_error.T).T , temp )
-            hidden_gradient_2 = hidden_layer1.T.dot(hidden_error_2)
-
-            temp = hidden_layer1 * ( 1 - hidden_layer1 )
-            hidden_error_1 = np.multiply( self.wh2.dot( hidden_error_2.T ).T, temp )
-            hidden_gradient_1 = Xtrain.T.dot( hidden_error_1 )
-
-            
-            for n2 in range(len(self.wo)):
-                self.wo[n2][0] -= output_gradient[n2] * step_size
-                for n1 in range( len( self.wh2 ) ):
-                    self.wh2[n1][n2] -= hidden_gradient_2[n1][n2] * step_size
-
-            for feature in range( len( self.wh1 ) ):
-                for n1 in range( len( self.wh2 ) ):
-                    self.wh1[feature][n1] -= hidden_gradient_1[feature][n1] * step_size
+        self.nn = self.nn.fit(Xtrain, ytrain.ravel())
 
     def predict(self,Xtest):
-        predictions = []
-        preds = []
-       
-        hidden_layer1 = self.transfer( np.dot( Xtest, self.wh1 ) )
+        predictions = self.nn.predict(Xtest)
 
-        hidden_layer2 = self.transfer( np.dot( hidden_layer1, self.wh2 ) )
-
-        output = self.transfer( np.dot( hidden_layer2, self.wo ) )
-
-        for val in output:
-            if val > 0.5:
-                predictions.append(1.)
-            else:
-                predictions.append(0.)
-                
         return predictions
+
+class LogisticReg(Classifier):
+    def __init__(self, parameters = {}):
+        # TODO: change epoch back to 100
+        self.params = utils.update_dictionary_items({'stepsize': 0.01, 'epochs': 10}, parameters)
+        self.weights = None
+
+    def learn(self, X, y):
+        numsamples = X.shape[0]
+        numfeatures = X.shape[1]
+
+        randIndex = random.randrange(0, numsamples-1)
+        self.weights = np.array([X[randIndex]])
+
+        # perform stochastic gradient descent
+        for _ in range(1, self.params['epochs']+1):
+            # do some shuffling of data points from 1 to n
+            randomIndices = np.array([i for i in range(numsamples)])
+            np.random.shuffle(randomIndices) # shuffle data for SGD
+
+            for j in range (numsamples):
+                index = randomIndices[j]
+                X_j = np.asarray([X[index]])
+                Y_j = np.asarray([y[index]])
+
+                # update weights
+                self.weights = self.weights - self.params['stepsize']*(utils.sigmoid(X_j.dot(self.weights.T)) - Y_j).dot(X_j)
+
+    def predict(self, Xtest):
+        Ytest = np.asarray([[round(utils.sigmoid(x[0]))] for x in Xtest.dot(self.weights.T)])
+        return Ytest
 
 # Susy: ~23 error (4 hidden units)
 class NeuralNet(Classifier):
