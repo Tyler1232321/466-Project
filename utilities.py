@@ -19,7 +19,6 @@ def gaussian_pdf(x, mean, stdev):
         if math.fabs(x - mean) < 1e-2:
             return 1.0
         else:
-            print('ret 0')
             return 0.0
     exponent = math.exp(-(math.pow(x - mean, 2) / (2 * math.pow(stdev, 2))))
     return (1 / (math.sqrt(2 * math.pi) * stdev)) * exponent
